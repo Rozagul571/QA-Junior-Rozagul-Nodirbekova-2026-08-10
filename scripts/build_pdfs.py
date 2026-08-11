@@ -64,7 +64,7 @@ CSS = """
            vertical-align:top; }
   th { background:#2f7d1a; color:#fff; font-weight:bold; }
   tr:nth-child(even) td { background:#f7faf6; }
-  img { max-width:230px; border:1px solid #e2e6ea; border-radius:6px; margin:6px 8px 6px 0; }
+  img { max-width:100%; border:1px solid #e2e6ea; border-radius:6px; margin:8px 0; }
   blockquote { border-left:4px solid #ffce54; background:#fffdf3; margin:10px 0;
                padding:6px 12px; color:#5a4b00; }
   a { color:#2f7d1a; text-decoration:none; }

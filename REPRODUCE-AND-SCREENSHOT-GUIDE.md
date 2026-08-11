@@ -1,122 +1,136 @@
-# 📸 Reproduce & Screenshot Guide
+# 📸 Reproduce & Evidence Guide (with real screenshots)
 
-Practical, run-based guide: **where each bug is, how to make it appear on screen, and exactly
-what to capture.** All findings come from actually running the project (no mock images). Take
-your own screenshots at each “📸 Capture” step.
+Run-based guide: **where each bug is, how to make it appear, and a real captured image of it.**
+Every image below is **real** — code images are read straight from the cloned project source
+(the buggy line highlighted); terminal images are actual captured output; the web screenshot is
+the app running. No mock images.
 
-> Two tracks: **A) Web app — runnable right now** (real console errors you can screenshot today)
-> and **B) Mobile app — needs an Android emulator/device** (steps to reproduce each screen).
+> Tracks: **A) Web app** (I ran it — real console errors captured) · **B) Mobile app**
+> (code-level evidence; live UI needs an Android emulator) · **C) Backend/API** (captured live).
 
 ---
 
-## A) WEB APP — runnable today (`enatega-multivendor-web`, Next.js)
+## A) WEB APP — I ran it (`enatega-multivendor-web`, Next.js)
 
-### A0. Start it
+Start it:
 ```bash
-cd enatega-multivendor-web
-npm install --legacy-peer-deps
+cd enatega-multivendor-web && npm install --legacy-peer-deps
 NEXT_PUBLIC_SERVER_URL="https://aws-server-v2.enatega.com/" \
 NEXT_PUBLIC_WS_SERVER_URL="wss://aws-server-v2.enatega.com/" \
-npx next dev --webpack
-# open http://localhost:3000
+npx next dev --webpack        # open http://localhost:3000
 ```
-✅ The landing page renders (proof: `01-manual-testing/web-run-screenshots/web-home.png`).
-The **real console errors below print in the terminal AND in the browser DevTools console.**
 
-### WEB-1 — Apollo `connectToDevTools` deprecated
-- **File:** `enatega-multivendor-web/lib/hooks/useSetApollo.tsx:218`
-- **What appears:** `An error occurred! … ApolloClient | connectToDevTools | Please use `devtools.enabled` instead.`
-- **How to see:** as soon as any page loads (terminal running `npm run dev`, or browser DevTools → Console).
-- 📸 **Capture:** the terminal / console line showing the `connectToDevTools` message.
+**The app runs — landing page (real screenshot):**
 
-### WEB-2 — `useLazyQuery` deprecated options (`onCompleted` / `onError` / `variables`)
-- **File:** `enatega-multivendor-web/lib/hooks/useLazyQueryQL.tsx:37-41` (used in **13** places app-wide)
-- **What appears (3 distinct, repeated on every render):**
-  - `useLazyQuery | onCompleted | … switch to derived state using data …`
-  - `useLazyQuery | onError | … switch to derived state …`
-  - `useLazyQuery | variables | Pass all variables to the returned execute function instead.`
-- **How to see:** open the home page; the console floods with `An error occurred!` (15× per load in this run).
-- 📸 **Capture:** the console block showing the repeated `useLazyQuery` messages.
-- 🧾 Full decoded text: `01-manual-testing/web-run-screenshots/CONSOLE-ERRORS-live.txt`
+![web app running](01-manual-testing/web-run-screenshots/web-home.png)
 
-### WEB-3 — next-intl webpack parsing warning
-- **File:** `enatega-multivendor-web/next.config.mjs:1` (`next-intl/plugin`)
-- **What appears:** `Parsing of …/next-intl/…/extractor/format/index.js for build dependencies failed at 'import(t)'`
-- **How to see:** in the `npm run dev` startup output.
-- 📸 **Capture:** the startup terminal line with the `next-intl … failed at 'import(t)'` warning.
+**The real console errors it prints on every render (captured live):**
+
+![web console errors](docs/evidence/WEB-console-errors.png)
+
+### WEB-1 — Apollo `connectToDevTools` deprecated → `useSetApollo.tsx:218`
+![WEB-1](docs/evidence/WEB-1-code.png)
+
+### WEB-2 — `useLazyQuery` deprecated options (13 usages) → `useLazyQueryQL.tsx:35-41`
+![WEB-2](docs/evidence/WEB-2-code.png)
+
+### WEB-3 — next-intl dynamic-import webpack warning → `next.config.mjs:1`
+![WEB-3](docs/evidence/WEB-3-code.png)
 
 ---
 
-## B) MOBILE APP — needs Android emulator/device (`enatega-multivendor-app`, Expo)
+## B) MOBILE APP — code evidence (`enatega-multivendor-app`, Expo)
 
-### B0. Start it
+> Live device screens need an Android emulator/Expo Go. The **exact source location** of each
+> bug is captured below; use the steps to reproduce on a device and add your own UI capture.
+
+Start it:
 ```bash
-cd enatega-multivendor-app
-npm install
-npx expo start           # press "a" for Android emulator, or scan in Expo Go
+cd enatega-multivendor-app && npm install
+npx expo start     # press "a" (Android emulator) or scan in Expo Go
 # demo login: demo-customer@enatega.com / 123123
 ```
 
-### MOB-1 — Login rejects valid modern-TLD emails
-- **File:** `src/screens/Login/useLogin.js:80` (regex `(\.\w{2,3})+$`)
-- **Steps:** Login → type `user@company.store` → **Continue**.
-- **You’ll see:** “Please enter a valid email” (valid address wrongly rejected).
-- 📸 **Capture:** the email field with the red error message.
+### MOB-1 — Email regex rejects `.store` / `.info`
+**Steps:** Login → type `user@company.store` → **Continue** → “Please enter a valid email”.
+![MOB-1](docs/evidence/MOB-1-code.png)
 
 ### MOB-2 — Password “eye” icon inverted
-- **File:** `src/screens/Login/useLogin.js:33` + `src/screens/Login/Login.js:88-89`
-- **Steps:** enter a registered email → **Continue** → look at the password field + eye icon.
-- **You’ll see:** field is masked but the icon already shows `eye-slash` (points the wrong way).
-- 📸 **Capture:** the password field showing the mismatched eye icon.
+**Steps:** registered email → Continue → the field is masked but the icon shows `eye-slash`.
+![MOB-2](docs/evidence/MOB-2-code.png)
 
-### MOB-3 — No `testID` / accessibility labels (automation + TalkBack)
-- **File:** `src/screens/Login/Login.js:69, 88, 117` (25 `TextInput`, **0** `testID` app-wide)
-- **Steps:** enable TalkBack, or run `adb shell uiautomator dump` and open the dump.
-- **You’ll see:** buttons announced “unlabeled”; empty `resource-id` / `content-desc`.
-- 📸 **Capture:** TalkBack focus on a button, or the uiautomator dump with empty ids.
+### MOB-3 — No `testID` / accessibility labels (25 inputs, 0 testIDs)
+**Steps:** enable TalkBack or `adb shell uiautomator dump` → controls are “unlabeled”.
+![MOB-3](docs/evidence/MOB-3-code.png)
 
 ### MOB-4 — Demo password hard-coded in the client
-- **File:** `src/screens/Login/useLogin.js:63-64`
-- **Steps:** enter `demo-customer@enatega.com` → **Continue**.
-- **You’ll see:** password auto-fills and login works without typing a password.
-- 📸 **Capture:** the pre-filled password step / successful login.
+**Steps:** enter `demo-customer@enatega.com` → Continue → password auto-fills, login works.
+![MOB-4](docs/evidence/MOB-4-code.png)
 
 ### MOB-5 — Cart quantity has no upper cap
-- **File:** `src/context/User.js:114 (addQuantity)`
-- **Steps:** open an item → press **+** many times (e.g. 99+) → open cart.
-- **You’ll see:** quantity keeps growing, line total multiplies without limit.
-- 📸 **Capture:** the cart line with the huge quantity/total.
+**Steps:** item → press **+** 99+ times → cart total multiplies without limit.
+![MOB-5](docs/evidence/MOB-5-code.png)
 
-### MOB-6 — `deleteItem` mutates cart state in place
-- **File:** `src/context/User.js:126` (`cart.splice(...)`)
-- **Steps:** add 2 items → delete one quickly → watch the count/list.
-- **You’ll see:** occasional stale count / item lingering until re-render.
-- 📸 **Capture:** the cart showing the inconsistent count.
+### MOB-6 — `deleteItem` mutates cart state in place (`splice`)
+**Steps:** add 2 items → delete one → occasional stale count until re-render.
+![MOB-6](docs/evidence/MOB-6-code.png)
 
-### MOB-7 — Offer filters empty the restaurant list
-- **File:** `src/screens/Menu/Menu.js` (reads `freeDelivery`/`acceptVouchers`; backend never sets them — see BACK-1)
-- **Steps:** restaurant list → **Offers** → **Free Delivery** (or **Accept Vouchers**) → Apply.
-- **You’ll see:** the list becomes empty.
-- 📸 **Capture:** the empty list after applying the filter.
+### MOB-7 — Offer filters read flags the backend never sets
+**Steps:** restaurant list → Offers → Free Delivery → Apply → list becomes empty.
+![MOB-7](docs/evidence/MOB-7-code.png)
 
 ---
 
-## C) BACKEND / API — no UI needed (screenshot Postman)
+## C) BACKEND / API — captured live
 
-### BACK-1 — Offer flags never set (root cause of MOB-7)
-- **Where:** `aws-server-v2.enatega.com/graphql` — `freeDelivery`/`acceptVouchers` are `false`/`null` for every restaurant. Analysis: `enatega-multivendor-app/QUAL-012_BACKEND_INSTRUCTIONS.md`.
+**Real responses from the live backend (health, 404 REST route, unauthorized, validation):**
 
-### BACK-2 / BACK-3 — Auth contract & missing REST route
-- Open `03-api-testing/results/newman-live-report.html` (or run the Postman collection).
-- 📸 **Capture:** the green run summary (`postman-live-run.png` already provided) and any request’s Test Results.
-- Findings: spec `POST /api/v1/auth/login` → **404** on the real backend (it uses GraphQL); nullable `$type` → `GRAPHQL_VALIDATION_FAILED`; protected query with no token → `Unauthorized`.
+![API live responses](docs/evidence/API-live-responses.png)
+
+**Postman / Newman live run — 5 requests · 10 assertions · 0 failures:**
+
+![Postman live run](03-api-testing/screenshots/postman-live-run.png)
+
+- **BACK-1:** `freeDelivery` / `acceptVouchers` are `false`/`null` for every restaurant
+  (root cause of MOB-7). Analysis: `enatega-multivendor-app/QUAL-012_BACKEND_INSTRUCTIONS.md`.
+- **BACK-2:** login mutation needs `$type: String!`; nullable → `GRAPHQL_VALIDATION_FAILED`.
+- **BACK-3:** the assignment’s `POST /api/v1/auth/login` REST route returns **404** — the app uses GraphQL.
 
 ---
 
-### Index of the real evidence already captured for you
-| File | Shows |
+## 🇺🇿 O‘zbekcha tushuntirish (nima qildim va bu rasmlar nima)
+
+Men QA sifatida **loyihani haqiqatan ishga tushirdim va xatolarni o‘zim rasmga oldim** —
+sun’iy (mockup) rasmlar emas, hammasi real:
+
+- **Web app’ni run qildim** (`enatega-multivendor-web`, Next.js). Sahifa ochildi
+  (yuqoridagi `web-home.png` — real ekran) va **har renderda konsolga chiqadigan real
+  xatolarni** yozib oldim (`WEB-console-errors.png`). Ular Apollo Client’ning eskirgan
+  (`deprecated`) API’lari: `connectToDevTools` va `useLazyQuery` ning
+  `onCompleted/onError/variables` variantlari.
+- **Har bir xato uchun “kod-dalil” rasmi** tayyorladim: bu haqiqiy manba kodidan olingan,
+  xato turgan **aniq qator ajratib** ko‘rsatilgan (masalan `MOB-1` — `useLogin.js:80`
+  dagi email regex). Ya’ni siz rasmda xato aynan **qaysi faylning qaysi qatorida**
+  ekanini ko‘rasiz.
+- **Backend/API’ni jonli sinadim**: `API-live-responses.png` — real serverdan kelgan
+  javoblar, `postman-live-run.png` — Postman/Newman testlari (5 so‘rov, 10 tekshiruv,
+  0 xato).
+- **Mobil ilova ekranlari** (login, cart) uchun jonli surat olish **Android emulyator**
+  talab qiladi (bu kompyuterda emulyator/disk yetarli emas). Shuning uchun mobil xatolar
+  uchun **kod-dalil rasmlari** berdim — xato joyi aniq ko‘rinadi; emulyatorda ochsangiz,
+  yuqoridagi “Steps” bo‘yicha o‘sha ekranni ham suratga olishingiz mumkin.
+
+**Muhim:** men **ilova kodini o‘zgartirmadim** — QA sifatida faqat ishga tushirib, tekshirib,
+xatolarni hujjatladim. Barcha rasmlar `docs/evidence/` va `01-manual-testing/`,
+`03-api-testing/` papkalarida; shu hujjatning **PDF versiyasi** ham rasmlar bilan
+`docs/pdf/REPRODUCE-AND-SCREENSHOT-GUIDE.pdf` da.
+
+### Rasmlar ro‘yxati (repoda)
+| Rasm | Nimani ko‘rsatadi |
 |---|---|
-| `01-manual-testing/web-run-screenshots/web-home.png` | Web app actually running |
-| `01-manual-testing/web-run-screenshots/CONSOLE-ERRORS-live.txt` | Decoded real console errors (WEB-1/2/3) |
-| `03-api-testing/screenshots/postman-live-run.png` | Live API run — 5 req / 10 assertions / 0 fail |
-| `BUG-LOCATION-MAP.md` | All findings by layer with `file:line` |
+| `01-manual-testing/web-run-screenshots/web-home.png` | Web ilova ishlayapti (real) |
+| `docs/evidence/WEB-console-errors.png` | Real konsol xatolari (WEB-1/2/3) |
+| `docs/evidence/WEB-1..3-code.png` | Web xatolari — aniq kod qatori |
+| `docs/evidence/MOB-1..7-code.png` | Mobil xatolar — aniq kod qatori |
+| `docs/evidence/API-live-responses.png` | Backend’dan real javoblar |
+| `03-api-testing/screenshots/postman-live-run.png` | Postman testlari (0 xato) |
