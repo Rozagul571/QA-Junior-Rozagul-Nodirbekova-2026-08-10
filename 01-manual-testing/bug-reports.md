@@ -29,7 +29,7 @@
 | **Steps to Reproduce** | 1. Launch app → tap **Login**.<br>2. In the email field type `user@company.store`.<br>3. Tap **Continue**. |
 | **Expected Result** | The address is accepted as valid; the app proceeds to the password / registration step. |
 | **Actual Result** | Inline error *“Please enter a valid email”* is shown and the flow is blocked. Any TLD of 4+ characters (`.store`, `.online`, `.email`, `.museum`) is rejected. |
-| **Attachments** | `docs/evidence/MOB-1-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/MOB-1-code.png` (see image below) |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:80`
 ```js
@@ -38,7 +38,7 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 ```
 
 
-![BUG-001 — real code evidence](docs/evidence/MOB-1-code.png)
+![BUG-001 — real code evidence](../docs/evidence/MOB-1-code.png)
 
 ---
 
@@ -55,12 +55,12 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the Login screen.<br>2. Run `adb shell uiautomator dump` (or enable TalkBack).<br>3. Inspect the email / password `EditText` and the **Continue** button. |
 | **Expected Result** | Each control has a stable `resource-id` (from `testID`) and a meaningful `content-desc` (from `accessibilityLabel`) for automation **and** screen readers. |
 | **Actual Result** | `resource-id` and `content-desc` are empty. TalkBack announces the buttons as “button, unlabeled”. Automation is forced onto brittle absolute XPath. |
-| **Attachments** | `docs/evidence/MOB-3-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/MOB-3-code.png` (see image below) |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/Login.js:69` (email `TextInput`), `:88` (password `TextInput`), `:117` (submit `TouchableOpacity`) — none carry `testID` / `accessibilityLabel`.
 
 
-![BUG-002 — real code evidence](docs/evidence/MOB-3-code.png)
+![BUG-002 — real code evidence](../docs/evidence/MOB-3-code.png)
 
 ---
 
@@ -77,12 +77,12 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Enter a registered email → **Continue**.<br>2. Observe the password field (text is masked) and the eye icon.<br>3. Tap the eye icon and observe. |
 | **Expected Result** | While the password is **hidden**, the icon should invite “show” (an open eye); tapping reveals the text and switches to a crossed-out eye. |
 | **Actual Result** | Initial state is masked but the icon already shows `eye-slash`; the affordance is reversed, so users tap expecting the wrong outcome. |
-| **Attachments** | `docs/evidence/MOB-2-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/MOB-2-code.png` (see image below) |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:33` (`showPassword` initialised to `true`) + `src/screens/Login/Login.js:88-89` (`secureTextEntry={showPassword}` and icon `showPassword ? 'eye-slash' : 'eye'`).
 
 
-![BUG-003 — real code evidence](docs/evidence/MOB-2-code.png)
+![BUG-003 — real code evidence](../docs/evidence/MOB-2-code.png)
 
 ---
 
@@ -99,12 +99,12 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. On the email step, enter `demo-customer@enatega.com` → **Continue**.<br>2. Observe that the password field is pre-populated and login succeeds without typing a password. |
 | **Expected Result** | No credential is ever hard-coded or auto-filled in the shipping client; demo data lives only on a seeded backend. |
 | **Actual Result** | The password `123123` is injected client-side for the demo account; a commented `defaultValue='demo-customer@enatega.com'` also remains in source. Anyone reading the bundle obtains working credentials. |
-| **Attachments** | `docs/evidence/MOB-4-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/MOB-4-code.png` (see image below) |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:63-64` (`if (emailRef.current === 'demo-customer@enatega.com') setPassword('123123')`) + `src/screens/Login/Login.js:74` (commented demo default).
 
 
-![BUG-004 — real code evidence](docs/evidence/MOB-4-code.png)
+![BUG-004 — real code evidence](../docs/evidence/MOB-4-code.png)
 
 ---
 
@@ -121,12 +121,12 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the restaurant list.<br>2. Open **Offers / Filters**.<br>3. Select **Free Delivery** (or **Accept Vouchers**) → **Apply**. |
 | **Expected Result** | The list is filtered to restaurants that offer free delivery / accept vouchers. |
 | **Actual Result** | The list becomes **empty** for every location, because the backend returns `freeDelivery` / `acceptVouchers` as `false` / `null` for all restaurants (no admin UI ever sets them). |
-| **Attachments** | `docs/evidence/MOB-7-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/MOB-7-code.png` (see image below) |
 
 📍 **Where to see it in code:** filter reads `item?.freeDelivery` / `item?.acceptVouchers` in `enatega-multivendor-app/src/screens/Menu/Menu.js`; full root-cause analysis in `enatega-multivendor-app/QUAL-012_BACKEND_INSTRUCTIONS.md`.
 
 
-![BUG-005 — real code evidence](docs/evidence/MOB-7-code.png)
+![BUG-005 — real code evidence](../docs/evidence/MOB-7-code.png)
 
 ---
 
@@ -143,11 +143,11 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the web app → **Login** → **Create account**.<br>2. Fill name / phone / password but leave one field (e.g. email is still the greyed placeholder).<br>3. Tap **Continue**. |
 | **Expected Result** | The form highlights the **specific** empty field with a clear message next to it. |
 | **Actual Result** | A single red toast **“Create User — All fields are required”** appears top-right; no field is highlighted, so the user can’t tell which one is missing. The check `Object.values(formData).some(val => !val)` flags **any** falsy value at once. |
-| **Attachments** | `docs/evidence/WEB-4-code.png` (see image below) |
+| **Attachments** | `../docs/evidence/WEB-4-code.png` (see image below) |
 
 📍 **Where to see it in code:** `enatega-multivendor-web/lib/ui/screen-components/un-protected/authentication/signup-with-email/index.tsx:70` (`Object.values(formData).some((val) => !val)`).
 
-![BUG-006 — real code evidence](docs/evidence/WEB-4-code.png)
+![BUG-006 — real code evidence](../docs/evidence/WEB-4-code.png)
 
 ---
 
