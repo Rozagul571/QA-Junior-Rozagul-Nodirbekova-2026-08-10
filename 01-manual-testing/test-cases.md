@@ -25,22 +25,6 @@ restaurant is **open**, network available, cart initially empty.
 
 ---
 
-### 🖼️ Reference screenshots
-
-| Step | Screenshot |
-|---|---|
-| Restaurant menu with **+** add buttons (TC-001, TC-003) | `screenshots/04-restaurant-menu.png` |
-| Item detail with quantity stepper & **Add to Cart** (TC-002, TC-009, TC-010) | `screenshots/05-item-detail.png` |
-| Cart with items, quantity steppers & totals (TC-003, TC-008) | `screenshots/06-cart.png` |
-| Empty-cart state (TC-008) | `screenshots/06-cart-empty.png` |
-| Checkout summary (post add-to-cart) | `screenshots/07-checkout.png` |
-
-![menu](screenshots/04-restaurant-menu.png)
-![item](screenshots/05-item-detail.png)
-![cart](screenshots/06-cart.png)
-
----
-
 ### 🔁 Traceability
 
 | Test Case | Verifies / relates to |

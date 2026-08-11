@@ -28,6 +28,7 @@ JOBS = [
     ("03-api-testing/api-testing.md", "api-testing.pdf"),
     ("04-answers/answers.md", "answers.pdf"),
     ("BUG-LOCATION-MAP.md", "BUG-LOCATION-MAP.pdf"),
+    ("REPRODUCE-AND-SCREENSHOT-GUIDE.md", "REPRODUCE-AND-SCREENSHOT-GUIDE.pdf"),
     ("README.md", "README.pdf"),
 ]
 

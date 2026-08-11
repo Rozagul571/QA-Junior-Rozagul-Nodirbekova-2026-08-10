@@ -16,6 +16,7 @@
 | # | Deliverable | Folder | Formats |
 |---|---|---|---|
 | ⭐ | **Bug / Error Location Map** — ran the app, precise `file:line` per layer (UI/frontend/backend/web/env) | [`BUG-LOCATION-MAP.md`](BUG-LOCATION-MAP.md) | MD · [PDF](docs/pdf/BUG-LOCATION-MAP.pdf) |
+| ⭐ | **Reproduce & Screenshot Guide** — where each bug is + exact steps so you capture your own screenshots | [`REPRODUCE-AND-SCREENSHOT-GUIDE.md`](REPRODUCE-AND-SCREENSHOT-GUIDE.md) | MD · [PDF](docs/pdf/REPRODUCE-AND-SCREENSHOT-GUIDE.pdf) |
 | 1 | **5 Bug Reports** (assignment template) | [`01-manual-testing/bug-reports.md`](01-manual-testing/bug-reports.md) | MD · [PDF](docs/pdf/bug-reports.pdf) |
 | 1 | **10 Test Cases** — Add to Cart | [`01-manual-testing/test-cases.md`](01-manual-testing/test-cases.md) | MD · [PDF](docs/pdf/test-cases.pdf) |
 | 1 | Screenshots (mockups + **real web-app run**) | [`01-manual-testing/screenshots/`](01-manual-testing/screenshots) · [`web-run-screenshots/`](01-manual-testing/web-run-screenshots) | PNG |

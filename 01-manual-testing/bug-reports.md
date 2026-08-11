@@ -29,15 +29,13 @@
 | **Steps to Reproduce** | 1. Launch app → tap **Login**.<br>2. In the email field type `user@company.store`.<br>3. Tap **Continue**. |
 | **Expected Result** | The address is accepted as valid; the app proceeds to the password / registration step. |
 | **Actual Result** | Inline error *“Please enter a valid email”* is shown and the flow is blocked. Any TLD of 4+ characters (`.store`, `.online`, `.email`, `.museum`) is rejected. |
-| **Attachments** | `screenshots/bug-01-email-regex.png` |
+| **Attachments** | reproduce per **REPRODUCE-AND-SCREENSHOT-GUIDE.md** and attach your own capture |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:80`
 ```js
 const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 // the final group (\.\w{2,3})+ caps the TLD at 2–3 chars; also [\\.-] wrongly escapes to backslash-or-dot
 ```
-
-![BUG-001](screenshots/bug-01-email-regex.png)
 
 ---
 
@@ -54,11 +52,9 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the Login screen.<br>2. Run `adb shell uiautomator dump` (or enable TalkBack).<br>3. Inspect the email / password `EditText` and the **Continue** button. |
 | **Expected Result** | Each control has a stable `resource-id` (from `testID`) and a meaningful `content-desc` (from `accessibilityLabel`) for automation **and** screen readers. |
 | **Actual Result** | `resource-id` and `content-desc` are empty. TalkBack announces the buttons as “button, unlabeled”. Automation is forced onto brittle absolute XPath. |
-| **Attachments** | `screenshots/bug-02-no-testid.png` |
+| **Attachments** | reproduce per **REPRODUCE-AND-SCREENSHOT-GUIDE.md** and attach your own capture |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/Login.js:69` (email `TextInput`), `:88` (password `TextInput`), `:117` (submit `TouchableOpacity`) — none carry `testID` / `accessibilityLabel`.
-
-![BUG-002](screenshots/bug-02-no-testid.png)
 
 ---
 
@@ -75,11 +71,9 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Enter a registered email → **Continue**.<br>2. Observe the password field (text is masked) and the eye icon.<br>3. Tap the eye icon and observe. |
 | **Expected Result** | While the password is **hidden**, the icon should invite “show” (an open eye); tapping reveals the text and switches to a crossed-out eye. |
 | **Actual Result** | Initial state is masked but the icon already shows `eye-slash`; the affordance is reversed, so users tap expecting the wrong outcome. |
-| **Attachments** | `screenshots/02-login-password.png` |
+| **Attachments** | reproduce per **REPRODUCE-AND-SCREENSHOT-GUIDE.md** and attach your own capture |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:33` (`showPassword` initialised to `true`) + `src/screens/Login/Login.js:88-89` (`secureTextEntry={showPassword}` and icon `showPassword ? 'eye-slash' : 'eye'`).
-
-![BUG-003](screenshots/02-login-password.png)
 
 ---
 
@@ -96,11 +90,9 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. On the email step, enter `demo-customer@enatega.com` → **Continue**.<br>2. Observe that the password field is pre-populated and login succeeds without typing a password. |
 | **Expected Result** | No credential is ever hard-coded or auto-filled in the shipping client; demo data lives only on a seeded backend. |
 | **Actual Result** | The password `123123` is injected client-side for the demo account; a commented `defaultValue='demo-customer@enatega.com'` also remains in source. Anyone reading the bundle obtains working credentials. |
-| **Attachments** | `screenshots/01-login-email.png` |
+| **Attachments** | reproduce per **REPRODUCE-AND-SCREENSHOT-GUIDE.md** and attach your own capture |
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:63-64` (`if (emailRef.current === 'demo-customer@enatega.com') setPassword('123123')`) + `src/screens/Login/Login.js:74` (commented demo default).
-
-![BUG-004](screenshots/01-login-email.png)
 
 ---
 
@@ -117,11 +109,9 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the restaurant list.<br>2. Open **Offers / Filters**.<br>3. Select **Free Delivery** (or **Accept Vouchers**) → **Apply**. |
 | **Expected Result** | The list is filtered to restaurants that offer free delivery / accept vouchers. |
 | **Actual Result** | The list becomes **empty** for every location, because the backend returns `freeDelivery` / `acceptVouchers` as `false` / `null` for all restaurants (no admin UI ever sets them). |
-| **Attachments** | `screenshots/03-home-restaurants.png` |
+| **Attachments** | reproduce per **REPRODUCE-AND-SCREENSHOT-GUIDE.md** and attach your own capture |
 
 📍 **Where to see it in code:** filter reads `item?.freeDelivery` / `item?.acceptVouchers` in `enatega-multivendor-app/src/screens/Menu/Menu.js`; full root-cause analysis in `enatega-multivendor-app/QUAL-012_BACKEND_INSTRUCTIONS.md`.
-
-![BUG-005](screenshots/03-home-restaurants.png)
 
 ---
 
