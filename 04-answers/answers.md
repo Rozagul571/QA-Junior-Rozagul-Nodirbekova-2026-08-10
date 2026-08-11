@@ -7,8 +7,8 @@
 ### 1. Difference between Smoke and Regression testing?
 
 **Smoke testing** is a quick, shallow check run right after a new build to confirm the
-critical paths work at all — “is the build stable enough to test?” (e.g. app launches, login
-succeeds, a restaurant opens). **Regression testing** is a broad, deep re-run of existing
+critical paths work at all — “is the build stable enough to test?” for example app launches, login
+succeeds, a restaurant opens. **Regression testing** is a broad, deep re-run of existing
 test cases after a change to confirm that *previously working* features still work and the
 change introduced no side effects. In short: smoke is **wide-but-shallow and fast** (a gate),
 regression is **narrow-but-deep and thorough** (a safety net), and smoke usually runs *before*
