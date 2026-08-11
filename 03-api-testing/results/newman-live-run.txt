@@ -1,38 +1,49 @@
 newman
 
-Enatega — Auth / Login API Tests
+Enatega — Auth / Login API Tests (QA)
 
-❏ 2. BONUS — Live Enatega GraphQL API
-↳ Spec route on real backend → documents 404
-  POST https://aws-server-v2.enatega.com/api/v1/auth/login [404 Not Found, 991B, 903ms]
+❏ 2. Live backend — real Enatega GraphQL
+↳ Health — GraphQL up (__typename) → 200 + data
+  POST https://aws-server-v2.enatega.com/graphql [200 OK, 1.57kB, 1392ms]
+  ✓  Status 200
+  ✓  data.__typename === Query
+  ✓  Response time < 3000 ms
+
+↳ Spec REST route on real backend → 404
+  POST https://aws-server-v2.enatega.com/api/v1/auth/login [404 Not Found, 991B, 399ms]
   ✓  Real backend has no REST /api/v1/auth/login (404)
 
-↳ GraphQL login — invalid types are rejected (400)
-  POST https://aws-server-v2.enatega.com/graphql [400 Bad Request, 1.48kB, 241ms]
-  ✓  Server responded 400 for invalid variable type
-  ✓  GraphQL validation error present
+↳ GraphQL login — invalid variable type → 400
+  POST https://aws-server-v2.enatega.com/graphql [400 Bad Request, 1.48kB, 329ms]
+  ✓  Status 400
+  ✓  GRAPHQL_VALIDATION_FAILED
 
-↳ GraphQL login — wrong password is unauthorized
-  POST https://aws-server-v2.enatega.com/graphql [200 OK, 1.7kB, 1261ms]
+↳ GraphQL login — wrong password → no token
+  POST https://aws-server-v2.enatega.com/graphql [200 OK, 1.7kB, 326ms]
   ✓  HTTP 200 (GraphQL transport)
-  ✓  No data / login is not granted
+  ✓  No login data, errors present
+
+↳ Protected query without token → Unauthorized
+  POST https://aws-server-v2.enatega.com/graphql [200 OK, 1.71kB, 324ms]
+  ✓  HTTP 200 (GraphQL transport)
+  ✓  Unauthorized error, no data
 
 ┌─────────────────────────┬─────────────────────┬─────────────────────┐
 │                         │            executed │              failed │
 ├─────────────────────────┼─────────────────────┼─────────────────────┤
 │              iterations │                   1 │                   0 │
 ├─────────────────────────┼─────────────────────┼─────────────────────┤
-│                requests │                   3 │                   0 │
+│                requests │                   5 │                   0 │
 ├─────────────────────────┼─────────────────────┼─────────────────────┤
-│            test-scripts │                   3 │                   0 │
+│            test-scripts │                   5 │                   0 │
 ├─────────────────────────┼─────────────────────┼─────────────────────┤
 │      prerequest-scripts │                   0 │                   0 │
 ├─────────────────────────┼─────────────────────┼─────────────────────┤
-│              assertions │                   5 │                   0 │
+│              assertions │                  10 │                   0 │
 ├─────────────────────────┴─────────────────────┴─────────────────────┤
-│ total run duration: 2.5s                                            │
+│ total run duration: 2.8s                                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│ total data received: 484B (approx)                                  │
+│ total data received: 690B (approx)                                  │
 ├─────────────────────────────────────────────────────────────────────┤
-│ average response time: 801ms [min: 241ms, max: 1261ms, s.d.: 422ms] │
+│ average response time: 554ms [min: 324ms, max: 1392ms, s.d.: 419ms] │
 └─────────────────────────────────────────────────────────────────────┘

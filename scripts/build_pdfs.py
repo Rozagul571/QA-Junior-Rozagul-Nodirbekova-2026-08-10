@@ -27,6 +27,7 @@ JOBS = [
     ("01-manual-testing/test-cases.md", "test-cases.pdf"),
     ("03-api-testing/api-testing.md", "api-testing.pdf"),
     ("04-answers/answers.md", "answers.pdf"),
+    ("BUG-LOCATION-MAP.md", "BUG-LOCATION-MAP.pdf"),
     ("README.md", "README.pdf"),
 ]
 

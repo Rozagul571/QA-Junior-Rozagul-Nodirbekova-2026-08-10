@@ -15,11 +15,12 @@
 
 | # | Deliverable | Folder | Formats |
 |---|---|---|---|
-| 1 | **5 Bug Reports** (colour-coded) | [`01-manual-testing/bug-reports.md`](01-manual-testing/bug-reports.md) | MD · [PDF](docs/pdf/bug-reports.pdf) |
+| ⭐ | **Bug / Error Location Map** — ran the app, precise `file:line` per layer (UI/frontend/backend/web/env) | [`BUG-LOCATION-MAP.md`](BUG-LOCATION-MAP.md) | MD · [PDF](docs/pdf/BUG-LOCATION-MAP.pdf) |
+| 1 | **5 Bug Reports** (assignment template) | [`01-manual-testing/bug-reports.md`](01-manual-testing/bug-reports.md) | MD · [PDF](docs/pdf/bug-reports.pdf) |
 | 1 | **10 Test Cases** — Add to Cart | [`01-manual-testing/test-cases.md`](01-manual-testing/test-cases.md) | MD · [PDF](docs/pdf/test-cases.pdf) |
-| 1 | Screenshots | [`01-manual-testing/screenshots/`](01-manual-testing/screenshots) | PNG |
-| 2 | **Appium automation** (Python · POM · 2 tests) | [`02-appium-automation/`](02-appium-automation) | code + [README](02-appium-automation/README.md) |
-| 3 | **Postman collection** + live results | [`03-api-testing/`](03-api-testing) | JSON · MD · [PDF](docs/pdf/api-testing.pdf) |
+| 1 | Screenshots (mockups + **real web-app run**) | [`01-manual-testing/screenshots/`](01-manual-testing/screenshots) · [`web-run-screenshots/`](01-manual-testing/web-run-screenshots) | PNG |
+| 2 | **Appium automation** (Python · POM · 2 tests) + [why the tests ERROR](02-appium-automation/WHY-TESTS-ERROR.md) | [`02-appium-automation/`](02-appium-automation) | code + [README](02-appium-automation/README.md) |
+| 3 | **Postman collection** (11 requests) + live run report & screenshot | [`03-api-testing/`](03-api-testing) | JSON · MD · [PDF](docs/pdf/api-testing.pdf) |
 | 4 | **Short answers** | [`04-answers/answers.md`](04-answers/answers.md) | MD · [PDF](docs/pdf/answers.pdf) |
 
 > 💡 The Markdown files render on GitHub with colour badges; the **PDFs in `docs/pdf/`**

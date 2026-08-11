@@ -1,21 +1,24 @@
 # Live API test run (results)
 
-The **BONUS** folder of the Postman collection was executed live against the real Enatega
-backend with Newman on 2026-08-10.
+The **live backend** folder of the Postman collection was executed with Newman against the
+real Enatega backend on 2026-08-10.
 
 | File | What it is |
 |---|---|
-| `newman-live-run.txt` | Human-readable CLI output of the run |
-| `newman-live-bonus.json` | Full machine-readable Newman report (requests + assertions + responses) |
+| `newman-live-report.html` | Rich HTML report (htmlextra) — open in a browser |
+| `newman-live-run.txt` | Human-readable CLI output |
+| `newman-live-bonus.json` | Full machine-readable Newman report |
+| `../screenshots/postman-live-run.png` | Screenshot of the passing run |
+| `../../docs/pdf/api-postman-run-report.pdf` | PDF of the report |
 
-**Result: 3 requests · 5 assertions · 0 failures.**
+**Result: 5 requests · 10 assertions · 0 failures.**
 
 ```
-✓ Real backend has no REST /api/v1/auth/login (404)
-✓ Server responded 400 for invalid variable type
-✓ GraphQL validation error present
-✓ HTTP 200 (GraphQL transport)
-✓ No data / login is not granted
+✓ Health — GraphQL up (__typename) → 200 + data
+✓ Spec REST route on real backend → 404
+✓ GraphQL login — invalid variable type → 400 (GRAPHQL_VALIDATION_FAILED)
+✓ GraphQL login — wrong password → no token
+✓ Protected query without token → Unauthorized
 ```
 
 Reproduce:
@@ -23,5 +26,6 @@ Reproduce:
 ```bash
 newman run ../Enatega-Auth-Login.postman_collection.json \
   -e ../Enatega-Auth.postman_environment.json \
-  --folder "2. BONUS — Live Enatega GraphQL API"
+  --folder "2. Live backend — real Enatega GraphQL" \
+  -r cli,htmlextra
 ```

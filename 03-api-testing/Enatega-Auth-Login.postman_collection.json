@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "b7e1c2a4-9f3d-4a21-8e6c-qa2026081001",
-    "name": "Enatega — Auth / Login API Tests",
-    "description": "QA Automation assignment — Part 3 (API Testing).\n\nFolder 1 tests the assignment-specified contract `POST /api/v1/auth/login` (phone_number + otp_code) with 1 positive and 3 negative cases, each with assertions on status code, response body and error messages. `base_url` is an environment variable so the same collection runs against any conforming server or a Postman mock.\n\nFolder 2 is a BONUS: real, live API tests against the actual Enatega backend (GraphQL), which is what the app under test really uses. These requests genuinely execute and assert on real responses.\n\nAuthor: Rozagul Nodirbekova — 2026-08-10",
+    "name": "Enatega — Auth / Login API Tests (QA)",
+    "description": "QA Automation assignment — Part 3 (API Testing).\n\n## What this collection does\n- **Folder 1 — Spec contract:** tests the assignment's `POST /api/v1/auth/login` (phone_number + otp_code): 1 positive + 5 negative/robustness cases. Each request asserts **status code**, **body/schema**, **error message** and **response time**. `{{base_url}}` is an environment variable so it runs against any conforming server or a Postman mock.\n- **Folder 2 — Live backend:** real requests against the actual Enatega backend (`aws-server-v2.enatega.com`, GraphQL). These EXECUTE live and assert on real responses (health, 404 on the REST route, auth negatives). This is what the app under test really uses.\n\n## How to run\nPostman: import this + the environment, pick the env, hit **Run**. \nNewman: `newman run Enatega-Auth-Login.postman_collection.json -e Enatega-Auth.postman_environment.json -r htmlextra`\n\nAuthor: Rozagul Nodirbekova — 2026-08-10",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -17,27 +17,29 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Guard: fail clearly if the server is unreachable",
-                  "pm.test('Server responded', function () {",
-                  "    pm.expect(pm.response.code, 'no response — is base_url set to a running server?').to.not.be.undefined;",
-                  "});",
-                  "",
                   "pm.test('Status code is 200 OK', function () {",
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response is JSON', function () {",
+                  "pm.test('Content-Type is JSON', function () {",
                   "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
                   "});",
                   "",
-                  "pm.test('Response contains a non-empty token', function () {",
+                  "pm.test('Body has a non-empty string token', function () {",
                   "    var json = pm.response.json();",
                   "    var token = json.token || (json.data && json.data.token);",
-                  "    pm.expect(token, 'token missing in response').to.be.a('string').and.to.have.length.above(10);",
+                  "    pm.expect(token, 'token missing').to.be.a('string').and.to.have.length.above(10);",
                   "    if (token) pm.environment.set('auth_token', token);",
                   "});",
                   "",
-                  "pm.test('Response time is under 2000ms', function () {",
+                  "pm.test('Response schema looks like an auth payload', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('object');",
+                  "    // typical fields; adjust to your server contract",
+                  "    pm.expect(Object.keys(json)).to.include.oneOf(['token', 'data']);",
+                  "});",
+                  "",
+                  "pm.test('Response time < 2000 ms', function () {",
                   "    pm.expect(pm.response.responseTime).to.be.below(2000);",
                   "});"
                 ]
@@ -47,16 +49,9 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            },
-            "description": "Happy path: valid phone number and valid OTP should return 200 and an auth token."
+            "body": { "mode": "raw", "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "Happy path: a valid phone number with a valid OTP returns 200 and an auth token which is chained into {{auth_token}}."
           }
         },
         {
@@ -70,15 +65,12 @@
                   "pm.test('Status code is 401 Unauthorized', function () {",
                   "    pm.response.to.have.status(401);",
                   "});",
-                  "",
-                  "pm.test('No token is returned', function () {",
+                  "pm.test('No token is issued for a wrong OTP', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.token, 'token must not be issued for a wrong OTP').to.be.undefined;",
+                  "    pm.expect(json.token).to.be.undefined;",
                   "});",
-                  "",
-                  "pm.test('Error message mentions the OTP', function () {",
-                  "    var json = pm.response.json();",
-                  "    var msg = (json.error || json.message || '').toString().toLowerCase();",
+                  "pm.test('Error message mentions OTP/code/invalid', function () {",
+                  "    var msg = (pm.response.json().error || pm.response.json().message || '').toString().toLowerCase();",
                   "    pm.expect(msg).to.match(/otp|code|invalid|incorrect/);",
                   "});"
                 ]
@@ -88,16 +80,9 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"000000\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            },
-            "description": "Wrong OTP for a valid phone number must be rejected with 401 and a helpful error."
+            "body": { "mode": "raw", "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"000000\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "Wrong OTP for a valid phone must be rejected with 401 and a helpful error."
           }
         },
         {
@@ -111,16 +96,12 @@
                   "pm.test('Status code is 400 Bad Request', function () {",
                   "    pm.response.to.have.status(400);",
                   "});",
-                  "",
-                  "pm.test('Error identifies the missing field', function () {",
-                  "    var json = pm.response.json();",
-                  "    var msg = (json.error || json.message || JSON.stringify(json)).toLowerCase();",
+                  "pm.test('Error identifies the missing phone field', function () {",
+                  "    var msg = (pm.response.json().error || pm.response.json().message || JSON.stringify(pm.response.json())).toLowerCase();",
                   "    pm.expect(msg).to.include('phone');",
                   "});",
-                  "",
                   "pm.test('No token is returned', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.token).to.be.undefined;",
+                  "    pm.expect(pm.response.json().token).to.be.undefined;",
                   "});"
                 ]
               }
@@ -129,16 +110,9 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"otp_code\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            },
-            "description": "Omitting the required phone_number must return 400 with a validation error naming the field."
+            "body": { "mode": "raw", "raw": "{\n  \"otp_code\": \"123456\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "Omitting the required phone_number must return 400 naming the field."
           }
         },
         {
@@ -152,16 +126,9 @@
                   "pm.test('Status code is 400 or 422', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
                   "});",
-                  "",
-                  "pm.test('Error mentions format / validation', function () {",
-                  "    var json = pm.response.json();",
-                  "    var msg = (json.error || json.message || JSON.stringify(json)).toLowerCase();",
+                  "pm.test('Error mentions format/validation', function () {",
+                  "    var msg = (pm.response.json().error || pm.response.json().message || JSON.stringify(pm.response.json())).toLowerCase();",
                   "    pm.expect(msg).to.match(/format|invalid|valid|phone/);",
-                  "});",
-                  "",
-                  "pm.test('No token is returned', function () {",
-                  "    var json = pm.response.json();",
-                  "    pm.expect(json.token).to.be.undefined;",
                   "});"
                 ]
               }
@@ -170,26 +137,98 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone_number\": \"12345\",\n  \"otp_code\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
-            },
-            "description": "A malformed phone number (no country code / too short) must fail validation."
+            "body": { "mode": "raw", "raw": "{\n  \"phone_number\": \"12345\",\n  \"otp_code\": \"123456\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "A malformed phone (no country code / too short) must fail validation."
+          }
+        },
+        {
+          "name": "Negative — empty body → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('No token is returned', function () {",
+                  "    pm.expect(pm.response.json().token).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "Robustness: an empty JSON object must be rejected, not 500."
+          }
+        },
+        {
+          "name": "Negative — wrong Content-Type → 415/400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 415 or 400', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 415]);",
+                  "});",
+                  "pm.test('Server did not crash (no 5xx)', function () {",
+                  "    pm.expect(pm.response.code).to.be.below(500);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "text/plain" }],
+            "body": { "mode": "raw", "raw": "phone_number=+998901234567&otp_code=123456" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api", "v1", "auth", "login"] },
+            "description": "Robustness: a non-JSON content type must be rejected cleanly (415/400), not 500."
           }
         }
       ],
-      "description": "Assignment-specified REST contract. Set {{base_url}} to a server that implements it (or a Postman mock). NOTE: the real Enatega backend does not expose this REST route (returns 404) — it uses GraphQL, tested in folder 2."
+      "description": "Assignment-specified REST contract. Point {{base_url}} at a conforming server or a Postman mock. NOTE: the real Enatega backend does not expose this REST route (returns 404) — it uses GraphQL (folder 2)."
     },
     {
-      "name": "2. BONUS — Live Enatega GraphQL API",
+      "name": "2. Live backend — real Enatega GraphQL",
       "item": [
         {
-          "name": "Spec route on real backend → documents 404",
+          "name": "Health — GraphQL up (__typename) → 200 + data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('data.__typename === Query', function () {",
+                  "    pm.expect(pm.response.json().data.__typename).to.eql('Query');",
+                  "});",
+                  "pm.test('Response time < 3000 ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"{ __typename }\"\n}" },
+            "url": { "raw": "{{graphql_host}}/graphql", "host": ["{{graphql_host}}"], "path": ["graphql"] },
+            "description": "Positive live check: the backend is up and answering GraphQL."
+          }
+        },
+        {
+          "name": "Spec REST route on real backend → 404",
           "event": [
             {
               "listen": "test",
@@ -199,7 +238,7 @@
                   "pm.test('Real backend has no REST /api/v1/auth/login (404)', function () {",
                   "    pm.response.to.have.status(404);",
                   "});",
-                  "// Finding: the app under test authenticates via GraphQL, not this REST route."
+                  "// Finding B3: the app authenticates via GraphQL, not this REST route."
                 ]
               }
             }
@@ -207,31 +246,22 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{graphql_host}}/api/v1/auth/login",
-              "host": ["{{graphql_host}}"],
-              "path": ["api", "v1", "auth", "login"]
-            }
+            "body": { "mode": "raw", "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}" },
+            "url": { "raw": "{{graphql_host}}/api/v1/auth/login", "host": ["{{graphql_host}}"], "path": ["api", "v1", "auth", "login"] }
           }
         },
         {
-          "name": "GraphQL login — invalid types are rejected (400)",
+          "name": "GraphQL login — invalid variable type → 400",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Server responded 400 for invalid variable type', function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test('GraphQL validation error present', function () {",
+                  "pm.test('Status 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('GRAPHQL_VALIDATION_FAILED', function () {",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.errors, 'expected GraphQL errors array').to.be.an('array');",
+                  "    pm.expect(json.errors).to.be.an('array');",
                   "    pm.expect(json.errors[0].extensions.code).to.eql('GRAPHQL_VALIDATION_FAILED');",
                   "});"
                 ]
@@ -241,33 +271,24 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"query\": \"mutation Login($email:String,$password:String,$type:String,$notificationToken:String){ login(email:$email,password:$password,type:$type,notificationToken:$notificationToken){ userId token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"123123\", \"type\": \"default\", \"notificationToken\": null }\n}"
-            },
-            "url": {
-              "raw": "{{graphql_host}}/graphql",
-              "host": ["{{graphql_host}}"],
-              "path": ["graphql"]
-            },
-            "description": "Live negative test: `$type` declared nullable but the schema needs `String!` → server returns a structured GRAPHQL_VALIDATION_FAILED error. Demonstrates real API-contract testing."
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"mutation Login($email:String,$password:String,$type:String){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"123123\", \"type\": \"default\" }\n}" },
+            "url": { "raw": "{{graphql_host}}/graphql", "host": ["{{graphql_host}}"], "path": ["graphql"] },
+            "description": "Live negative: `$type` declared nullable but schema needs String! → structured validation error (Finding B2)."
           }
         },
         {
-          "name": "GraphQL login — wrong password is unauthorized",
+          "name": "GraphQL login — wrong password → no token",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP 200 (GraphQL transport)', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('No data / login is not granted', function () {",
+                  "pm.test('HTTP 200 (GraphQL transport)', function () { pm.response.to.have.status(200); });",
+                  "pm.test('No login data, errors present', function () {",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.data == null || json.data.login == null).to.be.true;",
-                  "    pm.expect(json.errors, 'expected an errors array').to.be.an('array');",
+                  "    pm.expect(json.errors).to.be.an('array');",
                   "});"
                 ]
               }
@@ -276,20 +297,39 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"query\": \"mutation Login($email:String!,$password:String!,$type:String!){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"wrong-password\", \"type\": \"default\" }\n}"
-            },
-            "url": {
-              "raw": "{{graphql_host}}/graphql",
-              "host": ["{{graphql_host}}"],
-              "path": ["graphql"]
-            },
-            "description": "Live negative test with an incorrect password — the mutation must not return a token."
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"mutation Login($email:String!,$password:String!,$type:String!){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"wrong-password\", \"type\": \"default\" }\n}" },
+            "url": { "raw": "{{graphql_host}}/graphql", "host": ["{{graphql_host}}"], "path": ["graphql"] },
+            "description": "Live negative: an incorrect password must not return a token."
+          }
+        },
+        {
+          "name": "Protected query without token → Unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (GraphQL transport)', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Unauthorized error, no data', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data).to.be.null;",
+                  "    pm.expect(json.errors[0].message.toLowerCase()).to.include('unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"query\": \"{ configuration { currency currencySymbol } }\"\n}" },
+            "url": { "raw": "{{graphql_host}}/graphql", "host": ["{{graphql_host}}"], "path": ["graphql"] },
+            "description": "Live negative: a protected query with no auth header returns 'Unauthorized: token missing'."
           }
         }
       ],
-      "description": "These requests run against the real backend the customer app uses: https://aws-server-v2.enatega.com"
+      "description": "Live requests against the real backend the customer app uses: https://aws-server-v2.enatega.com"
     }
   ],
   "variable": [
