@@ -1,0 +1,1798 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "b7e1c2a4-9f3d-4a21-8e6c-qa2026081001"
+    },
+    "item": [
+      {
+        "id": "3555eb78-6e97-42aa-9c71-7c67ab1ca42d",
+        "name": "1. Spec contract — POST /api/v1/auth/login",
+        "description": {
+          "content": "Assignment-specified REST contract. Set {{base_url}} to a server that implements it (or a Postman mock). NOTE: the real Enatega backend does not expose this REST route (returns 404) — it uses GraphQL, tested in folder 2.",
+          "type": "text/plain"
+        },
+        "item": [
+          {
+            "id": "20c05eec-2899-42d1-8b87-8a1a8984cf3d",
+            "name": "Positive — valid phone + valid OTP → 200 + token",
+            "request": {
+              "description": {
+                "content": "Happy path: valid phone number and valid OTP should return 200 and an auth token.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "v1",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "7e0259d1-ec6d-45a4-a88d-a0d272dd5a91",
+                  "type": "text/javascript",
+                  "exec": [
+                    "// Guard: fail clearly if the server is unreachable",
+                    "pm.test('Server responded', function () {",
+                    "    pm.expect(pm.response.code, 'no response — is base_url set to a running server?').to.not.be.undefined;",
+                    "});",
+                    "",
+                    "pm.test('Status code is 200 OK', function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "",
+                    "pm.test('Response is JSON', function () {",
+                    "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                    "});",
+                    "",
+                    "pm.test('Response contains a non-empty token', function () {",
+                    "    var json = pm.response.json();",
+                    "    var token = json.token || (json.data && json.data.token);",
+                    "    pm.expect(token, 'token missing in response').to.be.a('string').and.to.have.length.above(10);",
+                    "    if (token) pm.environment.set('auth_token', token);",
+                    "});",
+                    "",
+                    "pm.test('Response time is under 2000ms', function () {",
+                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "2cdc46fc-7045-42e2-8392-5fb3c5def6f1",
+            "name": "Negative — invalid OTP → 401",
+            "request": {
+              "description": {
+                "content": "Wrong OTP for a valid phone number must be rejected with 401 and a helpful error.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "v1",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"000000\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "a876b784-6dfc-4fdb-8f7c-0bb972435579",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('Status code is 401 Unauthorized', function () {",
+                    "    pm.response.to.have.status(401);",
+                    "});",
+                    "",
+                    "pm.test('No token is returned', function () {",
+                    "    var json = pm.response.json();",
+                    "    pm.expect(json.token, 'token must not be issued for a wrong OTP').to.be.undefined;",
+                    "});",
+                    "",
+                    "pm.test('Error message mentions the OTP', function () {",
+                    "    var json = pm.response.json();",
+                    "    var msg = (json.error || json.message || '').toString().toLowerCase();",
+                    "    pm.expect(msg).to.match(/otp|code|invalid|incorrect/);",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "a04089ed-dbf3-4f12-8a47-825424fb8654",
+            "name": "Negative — missing phone_number → 400",
+            "request": {
+              "description": {
+                "content": "Omitting the required phone_number must return 400 with a validation error naming the field.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "v1",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"otp_code\": \"123456\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "b1f51640-6219-4dc8-b31e-75d59433ce4f",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('Status code is 400 Bad Request', function () {",
+                    "    pm.response.to.have.status(400);",
+                    "});",
+                    "",
+                    "pm.test('Error identifies the missing field', function () {",
+                    "    var json = pm.response.json();",
+                    "    var msg = (json.error || json.message || JSON.stringify(json)).toLowerCase();",
+                    "    pm.expect(msg).to.include('phone');",
+                    "});",
+                    "",
+                    "pm.test('No token is returned', function () {",
+                    "    var json = pm.response.json();",
+                    "    pm.expect(json.token).to.be.undefined;",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "fcd94677-d676-4971-bba1-13f1f2def88d",
+            "name": "Negative — invalid phone format → 400/422",
+            "request": {
+              "description": {
+                "content": "A malformed phone number (no country code / too short) must fail validation.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "api",
+                  "v1",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{base_url}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"phone_number\": \"12345\",\n  \"otp_code\": \"123456\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "c707c0af-b4d1-4eef-8cd8-0399c0e5c24f",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('Status code is 400 or 422', function () {",
+                    "    pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                    "});",
+                    "",
+                    "pm.test('Error mentions format / validation', function () {",
+                    "    var json = pm.response.json();",
+                    "    var msg = (json.error || json.message || JSON.stringify(json)).toLowerCase();",
+                    "    pm.expect(msg).to.match(/format|invalid|valid|phone/);",
+                    "});",
+                    "",
+                    "pm.test('No token is returned', function () {",
+                    "    var json = pm.response.json();",
+                    "    pm.expect(json.token).to.be.undefined;",
+                    "});"
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      },
+      {
+        "id": "35d7b91e-374e-4059-b8d3-8b70c22b8c12",
+        "name": "2. BONUS — Live Enatega GraphQL API",
+        "description": {
+          "content": "These requests run against the real backend the customer app uses: https://aws-server-v2.enatega.com",
+          "type": "text/plain"
+        },
+        "item": [
+          {
+            "id": "eeb80f71-6d25-4518-8fdb-3f0d0e303794",
+            "name": "Spec route on real backend → documents 404",
+            "request": {
+              "url": {
+                "path": [
+                  "api",
+                  "v1",
+                  "auth",
+                  "login"
+                ],
+                "host": [
+                  "{{graphql_host}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "3f035259-2115-45ae-9b73-14061809ef5b",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('Real backend has no REST /api/v1/auth/login (404)', function () {",
+                    "    pm.response.to.have.status(404);",
+                    "});",
+                    "// Finding: the app under test authenticates via GraphQL, not this REST route."
+                  ],
+                  "_lastExecutionId": "32f20751-485d-40ce-a217-da49c1a65af6"
+                }
+              }
+            ]
+          },
+          {
+            "id": "828a6970-0894-499a-aa6a-dfa02ad93e05",
+            "name": "GraphQL login — invalid types are rejected (400)",
+            "request": {
+              "description": {
+                "content": "Live negative test: `$type` declared nullable but the schema needs `String!` → server returns a structured GRAPHQL_VALIDATION_FAILED error. Demonstrates real API-contract testing.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "graphql"
+                ],
+                "host": [
+                  "{{graphql_host}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"query\": \"mutation Login($email:String,$password:String,$type:String,$notificationToken:String){ login(email:$email,password:$password,type:$type,notificationToken:$notificationToken){ userId token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"123123\", \"type\": \"default\", \"notificationToken\": null }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "50e2582b-08e4-4b15-a713-fd16948f5436",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('Server responded 400 for invalid variable type', function () {",
+                    "    pm.response.to.have.status(400);",
+                    "});",
+                    "pm.test('GraphQL validation error present', function () {",
+                    "    var json = pm.response.json();",
+                    "    pm.expect(json.errors, 'expected GraphQL errors array').to.be.an('array');",
+                    "    pm.expect(json.errors[0].extensions.code).to.eql('GRAPHQL_VALIDATION_FAILED');",
+                    "});"
+                  ],
+                  "_lastExecutionId": "331abdcb-f818-4b65-9b4e-2b432b24d5f1"
+                }
+              }
+            ]
+          },
+          {
+            "id": "af107d34-d977-4b70-93d9-77e419d2e120",
+            "name": "GraphQL login — wrong password is unauthorized",
+            "request": {
+              "description": {
+                "content": "Live negative test with an incorrect password — the mutation must not return a token.",
+                "type": "text/plain"
+              },
+              "url": {
+                "path": [
+                  "graphql"
+                ],
+                "host": [
+                  "{{graphql_host}}"
+                ],
+                "query": [],
+                "variable": []
+              },
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "method": "POST",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"query\": \"mutation Login($email:String!,$password:String!,$type:String!){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"wrong-password\", \"type\": \"default\" }\n}"
+              }
+            },
+            "response": [],
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "id": "da0b163b-d37d-4d8c-a1ac-f24ce5aa5faa",
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('HTTP 200 (GraphQL transport)', function () {",
+                    "    pm.response.to.have.status(200);",
+                    "});",
+                    "pm.test('No data / login is not granted', function () {",
+                    "    var json = pm.response.json();",
+                    "    pm.expect(json.data == null || json.data.login == null).to.be.true;",
+                    "    pm.expect(json.errors, 'expected an errors array').to.be.an('array');",
+                    "});"
+                  ],
+                  "_lastExecutionId": "19943998-c18d-4039-bb7e-21f87c245ed4"
+                }
+              }
+            ]
+          }
+        ],
+        "event": []
+      }
+    ],
+    "event": [],
+    "variable": [
+      {
+        "type": "string",
+        "value": "https://api.your-fooddelivery-server.com",
+        "key": "base_url"
+      },
+      {
+        "type": "string",
+        "value": "https://aws-server-v2.enatega.com",
+        "key": "graphql_host"
+      }
+    ],
+    "info": {
+      "_postman_id": "b7e1c2a4-9f3d-4a21-8e6c-qa2026081001",
+      "name": "Enatega — Auth / Login API Tests",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+      "description": {
+        "content": "QA Automation assignment — Part 3 (API Testing).\n\nFolder 1 tests the assignment-specified contract `POST /api/v1/auth/login` (phone_number + otp_code) with 1 positive and 3 negative cases, each with assertions on status code, response body and error messages. `base_url` is an environment variable so the same collection runs against any conforming server or a Postman mock.\n\nFolder 2 is a BONUS: real, live API tests against the actual Enatega backend (GraphQL), which is what the app under test really uses. These requests genuinely execute and assert on real responses.\n\nAuthor: Rozagul Nodirbekova — 2026-08-10",
+        "type": "text/plain"
+      }
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_using": "QA-Junior-Rozagul-Nodirbekova"
+    },
+    "id": "e2f1a0c3-1234-4bcd-9abc-qa2026081002",
+    "name": "Enatega — Auth (env)",
+    "values": [
+      {
+        "type": "any",
+        "value": "https://api.your-fooddelivery-server.com",
+        "key": "base_url"
+      },
+      {
+        "type": "any",
+        "value": "https://aws-server-v2.enatega.com",
+        "key": "graphql_host"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "auth_token"
+      }
+    ]
+  },
+  "globals": {
+    "id": "ca5258df-a36b-416a-8b6f-8fd68dc0416f",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 5,
+        "pending": 0,
+        "failed": 0
+      },
+      "testScripts": {
+        "total": 3,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 0,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 911.6666666666666,
+      "responseMin": 250,
+      "responseMax": 1778,
+      "responseSd": 640.3708994706809,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1786355498103,
+      "completed": 1786355500946
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 3,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "bff05f35-7f70-414c-86d6-958fe30f2d62",
+          "httpRequestId": "34125e4c-75bb-47b3-a3a8-ec8fc107d102"
+        },
+        "item": {
+          "id": "eeb80f71-6d25-4518-8fdb-3f0d0e303794",
+          "name": "Spec route on real backend → documents 404",
+          "request": {
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ],
+              "host": [
+                "{{graphql_host}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "3f035259-2115-45ae-9b73-14061809ef5b",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Real backend has no REST /api/v1/auth/login (404)', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "// Finding: the app under test authenticates via GraphQL, not this REST route."
+                ],
+                "_lastExecutionId": "32f20751-485d-40ce-a217-da49c1a65af6"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "api",
+              "v1",
+              "auth",
+              "login"
+            ],
+            "host": [
+              "aws-server-v2",
+              "enatega",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "1e98580f-5b5f-450e-bc10-5532775ef434",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "aws-server-v2.enatega.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "61",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"phone_number\": \"+998901234567\",\n  \"otp_code\": \"123456\"\n}"
+          }
+        },
+        "response": {
+          "id": "401ba931-6257-4496-9db5-5cb9502865f9",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "key": "Date",
+              "value": "Mon, 10 Aug 2026 09:51:38 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/html; charset=utf-8"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'none'"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Cross-Origin-Resource-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "key": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "key": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "15000"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "14966"
+            },
+            {
+              "key": "X-RateLimit-Reset",
+              "value": "1786355561"
+            },
+            {
+              "key": "Access-Control-Allow-Methods",
+              "value": "POST,GET,OPTIONS"
+            },
+            {
+              "key": "Access-Control-Allow-Headers",
+              "value": "Content-Type, Authorization"
+            },
+            {
+              "key": "Content-Encoding",
+              "value": "gzip"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              60,
+              33,
+              68,
+              79,
+              67,
+              84,
+              89,
+              80,
+              69,
+              32,
+              104,
+              116,
+              109,
+              108,
+              62,
+              10,
+              60,
+              104,
+              116,
+              109,
+              108,
+              32,
+              108,
+              97,
+              110,
+              103,
+              61,
+              34,
+              101,
+              110,
+              34,
+              62,
+              10,
+              60,
+              104,
+              101,
+              97,
+              100,
+              62,
+              10,
+              60,
+              109,
+              101,
+              116,
+              97,
+              32,
+              99,
+              104,
+              97,
+              114,
+              115,
+              101,
+              116,
+              61,
+              34,
+              117,
+              116,
+              102,
+              45,
+              56,
+              34,
+              62,
+              10,
+              60,
+              116,
+              105,
+              116,
+              108,
+              101,
+              62,
+              69,
+              114,
+              114,
+              111,
+              114,
+              60,
+              47,
+              116,
+              105,
+              116,
+              108,
+              101,
+              62,
+              10,
+              60,
+              47,
+              104,
+              101,
+              97,
+              100,
+              62,
+              10,
+              60,
+              98,
+              111,
+              100,
+              121,
+              62,
+              10,
+              60,
+              112,
+              114,
+              101,
+              62,
+              67,
+              97,
+              110,
+              110,
+              111,
+              116,
+              32,
+              80,
+              79,
+              83,
+              84,
+              32,
+              47,
+              97,
+              112,
+              105,
+              47,
+              118,
+              49,
+              47,
+              97,
+              117,
+              116,
+              104,
+              47,
+              108,
+              111,
+              103,
+              105,
+              110,
+              60,
+              47,
+              112,
+              114,
+              101,
+              62,
+              10,
+              60,
+              47,
+              98,
+              111,
+              100,
+              121,
+              62,
+              10,
+              60,
+              47,
+              104,
+              116,
+              109,
+              108,
+              62,
+              10
+            ]
+          },
+          "cookie": [],
+          "responseTime": 707,
+          "responseSize": 157
+        },
+        "id": "eeb80f71-6d25-4518-8fdb-3f0d0e303794",
+        "assertions": [
+          {
+            "assertion": "Real backend has no REST /api/v1/auth/login (404)",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "c5cb417d-9660-416b-9bdc-5f00118a7f5c",
+          "length": 3,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "8986fe27-bfca-41ba-b136-b600bc894deb"
+        },
+        "item": {
+          "id": "828a6970-0894-499a-aa6a-dfa02ad93e05",
+          "name": "GraphQL login — invalid types are rejected (400)",
+          "request": {
+            "description": {
+              "content": "Live negative test: `$type` declared nullable but the schema needs `String!` → server returns a structured GRAPHQL_VALIDATION_FAILED error. Demonstrates real API-contract testing.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "graphql"
+              ],
+              "host": [
+                "{{graphql_host}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation Login($email:String,$password:String,$type:String,$notificationToken:String){ login(email:$email,password:$password,type:$type,notificationToken:$notificationToken){ userId token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"123123\", \"type\": \"default\", \"notificationToken\": null }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "50e2582b-08e4-4b15-a713-fd16948f5436",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Server responded 400 for invalid variable type', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('GraphQL validation error present', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.errors, 'expected GraphQL errors array').to.be.an('array');",
+                  "    pm.expect(json.errors[0].extensions.code).to.eql('GRAPHQL_VALIDATION_FAILED');",
+                  "});"
+                ],
+                "_lastExecutionId": "331abdcb-f818-4b65-9b4e-2b432b24d5f1"
+              }
+            }
+          ]
+        },
+        "request": {
+          "description": {
+            "content": "Live negative test: `$type` declared nullable but the schema needs `String!` → server returns a structured GRAPHQL_VALIDATION_FAILED error. Demonstrates real API-contract testing.",
+            "type": "text/plain"
+          },
+          "url": {
+            "protocol": "https",
+            "path": [
+              "graphql"
+            ],
+            "host": [
+              "aws-server-v2",
+              "enatega",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "3c8d1d4b-ce6d-40ed-8556-27a652f65c38",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "aws-server-v2.enatega.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "333",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"query\": \"mutation Login($email:String,$password:String,$type:String,$notificationToken:String){ login(email:$email,password:$password,type:$type,notificationToken:$notificationToken){ userId token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"123123\", \"type\": \"default\", \"notificationToken\": null }\n}"
+          }
+        },
+        "response": {
+          "id": "ad963e98-dc65-4091-8c36-0e85e6b63089",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [
+            {
+              "key": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "key": "Date",
+              "value": "Mon, 10 Aug 2026 09:51:39 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "160"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self';script-src 'self' 'unsafe-inline' https://checkout.stripe.com https://www.gstatic.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;font-src 'self' data: https://fonts.gstatic.com http://themes.pixelstrap.com;img-src 'self' data: https: http:;connect-src 'self' https: http://localhost:3000 http://localhost:5173 http://localhost:8000;frame-src 'self' https://checkout.stripe.com;object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Cross-Origin-Resource-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "key": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "key": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "15000"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "14965"
+            },
+            {
+              "key": "X-RateLimit-Reset",
+              "value": "1786355561"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"a0-1Lm5wdDp+QV6AfaQKGkow5S1zB4\""
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              115,
+              34,
+              58,
+              91,
+              123,
+              34,
+              109,
+              101,
+              115,
+              115,
+              97,
+              103,
+              101,
+              34,
+              58,
+              34,
+              86,
+              97,
+              114,
+              105,
+              97,
+              98,
+              108,
+              101,
+              32,
+              92,
+              34,
+              36,
+              116,
+              121,
+              112,
+              101,
+              92,
+              34,
+              32,
+              111,
+              102,
+              32,
+              116,
+              121,
+              112,
+              101,
+              32,
+              92,
+              34,
+              83,
+              116,
+              114,
+              105,
+              110,
+              103,
+              92,
+              34,
+              32,
+              117,
+              115,
+              101,
+              100,
+              32,
+              105,
+              110,
+              32,
+              112,
+              111,
+              115,
+              105,
+              116,
+              105,
+              111,
+              110,
+              32,
+              101,
+              120,
+              112,
+              101,
+              99,
+              116,
+              105,
+              110,
+              103,
+              32,
+              116,
+              121,
+              112,
+              101,
+              32,
+              92,
+              34,
+              83,
+              116,
+              114,
+              105,
+              110,
+              103,
+              33,
+              92,
+              34,
+              46,
+              34,
+              44,
+              34,
+              101,
+              120,
+              116,
+              101,
+              110,
+              115,
+              105,
+              111,
+              110,
+              115,
+              34,
+              58,
+              123,
+              34,
+              99,
+              111,
+              100,
+              101,
+              34,
+              58,
+              34,
+              71,
+              82,
+              65,
+              80,
+              72,
+              81,
+              76,
+              95,
+              86,
+              65,
+              76,
+              73,
+              68,
+              65,
+              84,
+              73,
+              79,
+              78,
+              95,
+              70,
+              65,
+              73,
+              76,
+              69,
+              68,
+              34,
+              125,
+              125,
+              93,
+              125,
+              10
+            ]
+          },
+          "cookie": [],
+          "responseTime": 250,
+          "responseSize": 160
+        },
+        "id": "828a6970-0894-499a-aa6a-dfa02ad93e05",
+        "assertions": [
+          {
+            "assertion": "Server responded 400 for invalid variable type",
+            "skipped": false
+          },
+          {
+            "assertion": "GraphQL validation error present",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "37d95695-c415-4636-a389-292d39280fa6",
+          "length": 3,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "faa2dba6-727a-4f21-8506-69be17b15a68"
+        },
+        "item": {
+          "id": "af107d34-d977-4b70-93d9-77e419d2e120",
+          "name": "GraphQL login — wrong password is unauthorized",
+          "request": {
+            "description": {
+              "content": "Live negative test with an incorrect password — the mutation must not return a token.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "graphql"
+              ],
+              "host": [
+                "{{graphql_host}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation Login($email:String!,$password:String!,$type:String!){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"wrong-password\", \"type\": \"default\" }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "da0b163b-d37d-4d8c-a1ac-f24ce5aa5faa",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200 (GraphQL transport)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('No data / login is not granted', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data == null || json.data.login == null).to.be.true;",
+                  "    pm.expect(json.errors, 'expected an errors array').to.be.an('array');",
+                  "});"
+                ],
+                "_lastExecutionId": "19943998-c18d-4039-bb7e-21f87c245ed4"
+              }
+            }
+          ]
+        },
+        "request": {
+          "description": {
+            "content": "Live negative test with an incorrect password — the mutation must not return a token.",
+            "type": "text/plain"
+          },
+          "url": {
+            "protocol": "https",
+            "path": [
+              "graphql"
+            ],
+            "host": [
+              "aws-server-v2",
+              "enatega",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "029c26e9-0fc5-475b-b64e-2188c373bb97",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "aws-server-v2.enatega.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "247",
+              "system": true
+            }
+          ],
+          "method": "POST",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"query\": \"mutation Login($email:String!,$password:String!,$type:String!){ login(email:$email,password:$password,type:$type){ token } }\",\n  \"variables\": { \"email\": \"demo-customer@enatega.com\", \"password\": \"wrong-password\", \"type\": \"default\" }\n}"
+          }
+        },
+        "response": {
+          "id": "123ba125-d818-4ca6-97a9-f50e10689c4a",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Server",
+              "value": "nginx/1.24.0 (Ubuntu)"
+            },
+            {
+              "key": "Date",
+              "value": "Mon, 10 Aug 2026 09:51:39 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "167"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self';script-src 'self' 'unsafe-inline' https://checkout.stripe.com https://www.gstatic.com;style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;font-src 'self' data: https://fonts.gstatic.com http://themes.pixelstrap.com;img-src 'self' data: https: http:;connect-src 'self' https: http://localhost:3000 http://localhost:5173 http://localhost:8000;frame-src 'self' https://checkout.stripe.com;object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Cross-Origin-Resource-Policy",
+              "value": "same-origin"
+            },
+            {
+              "key": "Origin-Agent-Cluster",
+              "value": "?1"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "no-referrer"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-DNS-Prefetch-Control",
+              "value": "off"
+            },
+            {
+              "key": "X-Download-Options",
+              "value": "noopen"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "SAMEORIGIN"
+            },
+            {
+              "key": "X-Permitted-Cross-Domain-Policies",
+              "value": "none"
+            },
+            {
+              "key": "X-XSS-Protection",
+              "value": "0"
+            },
+            {
+              "key": "X-XSS-Protection",
+              "value": "1; mode=block"
+            },
+            {
+              "key": "X-RateLimit-Limit",
+              "value": "15000"
+            },
+            {
+              "key": "X-RateLimit-Remaining",
+              "value": "14964"
+            },
+            {
+              "key": "X-RateLimit-Reset",
+              "value": "1786355561"
+            },
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "ETag",
+              "value": "W/\"a7-+OQU8kofr2no4+XLak891+vFn1k\""
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "geolocation=(), microphone=()"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              123,
+              34,
+              101,
+              114,
+              114,
+              111,
+              114,
+              115,
+              34,
+              58,
+              91,
+              123,
+              34,
+              109,
+              101,
+              115,
+              115,
+              97,
+              103,
+              101,
+              34,
+              58,
+              34,
+              85,
+              110,
+              97,
+              117,
+              116,
+              104,
+              111,
+              114,
+              105,
+              122,
+              101,
+              100,
+              58,
+              32,
+              116,
+              111,
+              107,
+              101,
+              110,
+              32,
+              109,
+              105,
+              115,
+              115,
+              105,
+              110,
+              103,
+              34,
+              44,
+              34,
+              108,
+              111,
+              99,
+              97,
+              116,
+              105,
+              111,
+              110,
+              115,
+              34,
+              58,
+              91,
+              123,
+              34,
+              108,
+              105,
+              110,
+              101,
+              34,
+              58,
+              49,
+              44,
+              34,
+              99,
+              111,
+              108,
+              117,
+              109,
+              110,
+              34,
+              58,
+              54,
+              53,
+              125,
+              93,
+              44,
+              34,
+              112,
+              97,
+              116,
+              104,
+              34,
+              58,
+              91,
+              34,
+              108,
+              111,
+              103,
+              105,
+              110,
+              34,
+              93,
+              44,
+              34,
+              101,
+              120,
+              116,
+              101,
+              110,
+              115,
+              105,
+              111,
+              110,
+              115,
+              34,
+              58,
+              123,
+              34,
+              99,
+              111,
+              100,
+              101,
+              34,
+              58,
+              34,
+              73,
+              78,
+              84,
+              69,
+              82,
+              78,
+              65,
+              76,
+              95,
+              83,
+              69,
+              82,
+              86,
+              69,
+              82,
+              95,
+              69,
+              82,
+              82,
+              79,
+              82,
+              34,
+              125,
+              125,
+              93,
+              44,
+              34,
+              100,
+              97,
+              116,
+              97,
+              34,
+              58,
+              110,
+              117,
+              108,
+              108,
+              125,
+              10
+            ]
+          },
+          "cookie": [],
+          "responseTime": 1778,
+          "responseSize": 167
+        },
+        "id": "af107d34-d977-4b70-93d9-77e419d2e120",
+        "assertions": [
+          {
+            "assertion": "HTTP 200 (GraphQL transport)",
+            "skipped": false
+          },
+          {
+            "assertion": "No data / login is not granted",
+            "skipped": false
+          }
+        ]
+      }
+    ],
+    "transfers": {
+      "responseTotal": 484
+    },
+    "failures": [],
+    "error": null
+  }
+}

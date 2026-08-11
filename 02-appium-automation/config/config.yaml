@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# Appium / test configuration — the ONLY place device & app details live.
+# Everything here can be overridden by an environment variable of the same
+# name in UPPER_CASE (see utils/driver_factory.py), e.g. APP_PATH, DEVICE_NAME.
+# ---------------------------------------------------------------------------
+
+appium:
+  server_url: "http://127.0.0.1:4723"
+
+capabilities:
+  platformName: "Android"
+  automationName: "UiAutomator2"
+  deviceName: "Pixel_6_API_34"          # emulator or real device name (`adb devices`)
+  platformVersion: "14"
+  # Provide EITHER an installed app id (appPackage/appActivity) OR a build (app).
+  app: "./app/enatega-customer.apk"     # path to the .apk under test
+  appPackage: "com.enatega.multivendor"
+  appActivity: ".MainActivity"
+  autoGrantPermissions: true            # accept location / notification dialogs
+  noReset: false                        # clean state each run -> independent tests
+  newCommandTimeout: 120
+  language: "en"
+  locale: "US"
+
+timeouts:
+  implicit: 0        # we rely on EXPLICIT waits only (implicit stays 0)
+  explicit: 20       # default WebDriverWait timeout (seconds)
+  polling: 0.5       # WebDriverWait poll interval (seconds)
+
+test_data:
+  base_email: "demo-customer@enatega.com"
+  password: "123123"
+  restaurant_name: "Pizza Palace"
+  item_name: "Margherita Pizza"
+
+paths:
+  screenshots: "./screenshots"          # failure screenshots land here

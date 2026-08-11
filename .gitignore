@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+# Appium/pytest artifacts
+02-appium-automation/report.html
+02-appium-automation/screenshots/*.png
+# OS
+.DS_Store
+Thumbs.db
+# node
+node_modules/

@@ -1,0 +1,6 @@
+# Appium mobile automation — Python
+Appium-Python-Client==3.2.1
+selenium==4.21.0
+pytest==8.2.2
+pytest-html==4.1.1
+PyYAML==6.0.1
