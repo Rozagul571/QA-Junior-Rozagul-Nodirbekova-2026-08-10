@@ -29,7 +29,7 @@
 | **Steps to Reproduce** | 1. Launch app → tap **Login**.<br>2. In the email field type `user@company.store`.<br>3. Tap **Continue**. |
 | **Expected Result** | The address is accepted as valid; the app proceeds to the password / registration step. |
 | **Actual Result** | Inline error *“Please enter a valid email”* is shown and the flow is blocked. Any TLD of 4+ characters (`.store`, `.online`, `.email`, `.museum`) is rejected. |
-| **Attachments** | `../docs/evidence/MOB-1-code.png` (see image below) |
+| **Attachments** | 
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:80`
 ```js
@@ -77,7 +77,7 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Enter a registered email → **Continue**.<br>2. Observe the password field (text is masked) and the eye icon.<br>3. Tap the eye icon and observe. |
 | **Expected Result** | While the password is **hidden**, the icon should invite “show” (an open eye); tapping reveals the text and switches to a crossed-out eye. |
 | **Actual Result** | Initial state is masked but the icon already shows `eye-slash`; the affordance is reversed, so users tap expecting the wrong outcome. |
-| **Attachments** | `../docs/evidence/MOB-2-code.png` (see image below) |
+| **Attachments** | 
 
 📍 **Where to see it in code:** `enatega-multivendor-app/src/screens/Login/useLogin.js:33` (`showPassword` initialised to `true`) + `src/screens/Login/Login.js:88-89` (`secureTextEntry={showPassword}` and icon `showPassword ? 'eye-slash' : 'eye'`).
 
@@ -121,7 +121,7 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the restaurant list.<br>2. Open **Offers / Filters**.<br>3. Select **Free Delivery** (or **Accept Vouchers**) → **Apply**. |
 | **Expected Result** | The list is filtered to restaurants that offer free delivery / accept vouchers. |
 | **Actual Result** | The list becomes **empty** for every location, because the backend returns `freeDelivery` / `acceptVouchers` as `false` / `null` for all restaurants (no admin UI ever sets them). |
-| **Attachments** | `../docs/evidence/MOB-7-code.png` (see image below) |
+| **Attachments** |
 
 📍 **Where to see it in code:** filter reads `item?.freeDelivery` / `item?.acceptVouchers` in `enatega-multivendor-app/src/screens/Menu/Menu.js`; full root-cause analysis in `enatega-multivendor-app/QUAL-012_BACKEND_INSTRUCTIONS.md`.
 
@@ -143,7 +143,7 @@ const emailRegex = /^\w+([\\.-]?\w+)*@\w+([\\.-]?\w+)*(\.\w{2,3})+$/
 | **Steps to Reproduce** | 1. Open the web app → **Login** → **Create account**.<br>2. Fill name / phone / password but leave one field (e.g. email is still the greyed placeholder).<br>3. Tap **Continue**. |
 | **Expected Result** | The form highlights the **specific** empty field with a clear message next to it. |
 | **Actual Result** | A single red toast **“Create User — All fields are required”** appears top-right; no field is highlighted, so the user can’t tell which one is missing. The check `Object.values(formData).some(val => !val)` flags **any** falsy value at once. |
-| **Attachments** | `../docs/evidence/WEB-4-code.png` (see image below) |
+| **Attachments** | |
 
 📍 **Where to see it in code:** `enatega-multivendor-web/lib/ui/screen-components/un-protected/authentication/signup-with-email/index.tsx:70` (`Object.values(formData).some((val) => !val)`).
 
